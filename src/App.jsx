@@ -43,7 +43,7 @@ export default function App() {
         <Route path="/marketing" element={<MarketingPage />} />
         <Route path="/alianzas" element={<AlliancesPage />} />
         <Route path="/portal" element={<PortalPage />} />
-        <Route path="/configuracion" element={<SettingsPage />} />
+        <Route path="/config" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
