@@ -1,93 +1,52 @@
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '@/lib/AuthContext'
 import { NAV_ITEMS } from '@/lib/constants'
-import { cn } from '@/lib/utils'
-import { LogOut, ChevronLeft } from 'lucide-react'
-import { useState } from 'react'
 
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
+export default function Sidebar({ collapsed, onToggle }) {
+  const { user, logout } = useAuth()
 
   return (
-    <aside
-      className={cn(
-        'fixed top-0 left-0 h-screen bg-surface-1 border-r border-white/[0.06] flex flex-col z-40 transition-all duration-300',
-        collapsed ? 'w-[68px]' : 'w-[240px]'
-      )}
-    >
-      {/* Brand */}
-      <div className="h-16 flex items-center gap-3 px-4 border-b border-white/[0.06] flex-shrink-0">
-        <div className="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-          ⚖️
-        </div>
-        {!collapsed && (
-          <div className="min-w-0">
-            <div className="text-sm font-bold text-white truncate leading-tight">
-              tramiteslegales.do
-            </div>
-            <div className="text-[10px] text-white/30 font-medium tracking-wider uppercase">
-              Backoffice
-            </div>
-          </div>
-        )}
+    <aside className={`fixed top-0 left-0 h-screen bg-[#0c1220] border-r border-white/[0.06] z-40 flex flex-col transition-all duration-200 ${collapsed ? 'w-16' : 'w-56'}`}>
+      {/* Logo */}
+      <div className="h-14 flex items-center px-4 border-b border-white/[0.06] shrink-0">
+        <button onClick={onToggle} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center text-sm shrink-0">⚖️</div>
+          {!collapsed && <span className="text-sm font-bold text-white tracking-tight">tramiteslegales</span>}
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2">
-        <div className="space-y-0.5">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.key}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all group',
-                  isActive
-                    ? 'bg-brand-300/10 text-brand-300'
-                    : 'text-white/40 hover:text-white/70 hover:bg-white/[0.03]'
-                )
-              }
-            >
-              <item.icon size={18} className="flex-shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="flex-1 truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className="bg-brand-300/20 text-brand-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </div>
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+        {NAV_ITEMS.map(item => (
+          <NavLink key={item.path} to={item.path} end={item.path === '/'}
+            className={({ isActive }) => `flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-white/40 hover:text-white/60 hover:bg-white/[0.03]'}`}>
+            <span className="text-base w-5 text-center shrink-0">{item.icon}</span>
+            {!collapsed && <span className="truncate">{item.label}</span>}
+          </NavLink>
+        ))}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-white/[0.06] p-2 flex-shrink-0">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-white/30 hover:text-white/60 hover:bg-white/[0.03] w-full transition-all"
-        >
-          <ChevronLeft
-            size={18}
-            className={cn('transition-transform', collapsed && 'rotate-180')}
-          />
-          {!collapsed && <span>Colapsar</span>}
-        </button>
-
-        {!collapsed && (
-          <div className="flex items-center gap-3 px-3 py-2.5 mt-1">
-            <div className="w-7 h-7 rounded-full bg-brand-500/30 flex items-center justify-center text-[11px] font-bold text-brand-300 flex-shrink-0">
-              AD
+      {/* User / Logout */}
+      <div className="border-t border-white/[0.06] p-3 shrink-0">
+        {!collapsed ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white/50 shrink-0">
+                {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-white/60 truncate">{user?.name || 'Usuario'}</p>
+                <p className="text-[10px] text-white/25 capitalize">{user?.role}</p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[12px] font-medium text-white/60 truncate">Admin</div>
-              <div className="text-[10px] text-white/25 truncate">Superadmin</div>
-            </div>
-            <LogOut size={14} className="text-white/20 hover:text-white/50 cursor-pointer flex-shrink-0" />
+            <button onClick={logout} className="text-white/20 hover:text-red-400 transition-colors" title="Cerrar sesión">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            </button>
           </div>
+        ) : (
+          <button onClick={logout} className="w-full flex justify-center text-white/20 hover:text-red-400 transition-colors" title="Cerrar sesión">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          </button>
         )}
       </div>
     </aside>

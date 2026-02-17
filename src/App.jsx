@@ -1,5 +1,7 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from '@/lib/AuthContext'
 import AppLayout from '@/components/layout/AppLayout'
+import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import OrdersPage from '@/pages/OrdersPage'
 import OrderDetailPage from '@/pages/OrderDetailPage'
@@ -14,18 +16,26 @@ import AlliancesPage from '@/pages/AlliancesPage'
 import PortalPage from '@/pages/PortalPage'
 import SettingsPage from '@/pages/SettingsPage'
 
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth()
+  if (loading) return (
+    <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+      <div className="text-white/40 text-sm">Cargando...</div>
+    </div>
+  )
+  return isAuthenticated ? children : <Navigate to="/login" replace />
+}
+
 export default function App() {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<DashboardPage />} />
-
         <Route path="/ordenes" element={<OrdersPage />} />
         <Route path="/ordenes/:orderId" element={<OrderDetailPage />} />
-
         <Route path="/clientes" element={<ClientsPage />} />
         <Route path="/clientes/:clientId" element={<ClientDetailPage />} />
-
         <Route path="/catalogo" element={<CatalogPage />} />
         <Route path="/igualas" element={<IgualasPage />} />
         <Route path="/finanzas" element={<FinancePage />} />
@@ -33,20 +43,8 @@ export default function App() {
         <Route path="/marketing" element={<MarketingPage />} />
         <Route path="/alianzas" element={<AlliancesPage />} />
         <Route path="/portal" element={<PortalPage />} />
-        <Route path="/config" element={<SettingsPage />} />
-
-        {/* 404 */}
-        <Route
-          path="*"
-          element={
-            <div className="flex items-center justify-center h-[60vh] text-center">
-              <div>
-                <div className="text-6xl font-bold text-white/10 mb-2">404</div>
-                <p className="text-white/30">Página no encontrada</p>
-              </div>
-            </div>
-          }
-        />
+        <Route path="/configuracion" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   )
