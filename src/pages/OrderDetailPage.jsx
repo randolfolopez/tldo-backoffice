@@ -3,15 +3,23 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useApi } from '@/lib/hooks'
 import api from '@/lib/api'
 import { formatRD, formatDate } from '@/lib/utils'
+import OrderMessages from '@/components/orders/OrderMessages'
 
 const statusLabels = { received: 'Recibida', review: 'En revisión', processing: 'En proceso', waiting_entity: 'Esp. entidad', completed: 'Completada', delivered: 'Entregada', cancelled: 'Cancelada' }
 const statusFlow = ['received', 'review', 'processing', 'waiting_entity', 'completed', 'delivered']
+
+const TABS = [
+  { key: 'detalles', label: 'Detalles' },
+  { key: 'historial', label: 'Historial' },
+  { key: 'mensajes', label: 'Mensajes' },
+]
 
 export default function OrderDetailPage() {
   const { orderId } = useParams()
   const navigate = useNavigate()
   const { data: order, loading, error, refetch } = useApi(() => api.getOrder(orderId), [orderId])
   const [updating, setUpdating] = useState(false)
+  const [activeTab, setActiveTab] = useState('detalles')
 
   const changeStatus = async (newStatus) => {
     setUpdating(true)
@@ -30,6 +38,7 @@ export default function OrderDetailPage() {
   if (!order) return null
 
   const currentIdx = statusFlow.indexOf(order.status)
+  const messageCount = (order.messages || []).length
 
   return (
     <div className="p-6 space-y-6">
@@ -59,37 +68,77 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* Details */}
-          <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-            <h3 className="text-xs text-white/40 uppercase tracking-wider mb-4">Detalles</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-white/30">Cliente:</span><p className="text-white/80 mt-0.5">{order.client_name || '—'}</p></div>
-              <div><span className="text-white/30">Servicio:</span><p className="text-white/80 mt-0.5">{order.service_name || '—'}</p></div>
-              <div><span className="text-white/30">Asignado a:</span><p className="text-white/80 mt-0.5">{order.assignee_name || 'Sin asignar'}</p></div>
-              <div><span className="text-white/30">Prioridad:</span><p className="text-white/80 mt-0.5 capitalize">{order.priority}</p></div>
-              <div><span className="text-white/30">Monto:</span><p className="text-white/80 mt-0.5 font-medium">{formatRD(order.amount)}</p></div>
-              <div><span className="text-white/30">Pagado:</span><p className="text-white/80 mt-0.5">{formatRD(order.amount_paid)} <span className="text-white/30">({order.payment_status})</span></p></div>
-              <div><span className="text-white/30">Creada:</span><p className="text-white/80 mt-0.5">{formatDate(order.created_at)}</p></div>
-              <div><span className="text-white/30">Vencimiento:</span><p className="text-white/80 mt-0.5">{order.due_date ? formatDate(order.due_date) : '—'}</p></div>
-            </div>
-            {order.notes && <div className="mt-4 pt-4 border-t border-white/[0.06]"><span className="text-white/30 text-sm">Notas:</span><p className="text-white/60 text-sm mt-1">{order.notes}</p></div>}
+          {/* Tabs */}
+          <div className="flex gap-1 border-b border-white/[0.06] pb-0">
+            {TABS.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2 text-xs font-medium rounded-t-lg transition-colors relative ${
+                  activeTab === tab.key
+                    ? 'bg-white/[0.05] text-white border border-white/[0.06] border-b-transparent -mb-px'
+                    : 'text-white/30 hover:text-white/50'
+                }`}
+              >
+                {tab.label}
+                {tab.key === 'mensajes' && messageCount > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full bg-blue-500/20 text-blue-400">
+                    {messageCount}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
-          {/* Timeline */}
+          {/* Tab Content */}
           <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-            <h3 className="text-xs text-white/40 uppercase tracking-wider mb-4">Historial</h3>
-            <div className="space-y-3">
-              {(order.timeline || []).map((t, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500/40 mt-1.5 shrink-0" />
-                  <div>
-                    <p className="text-sm text-white/70">{t.description}</p>
-                    <p className="text-xs text-white/30 mt-0.5">{t.user_name} · {formatDate(t.created_at)}</p>
-                  </div>
+            {activeTab === 'detalles' && (
+              <>
+                <h3 className="text-xs text-white/40 uppercase tracking-wider mb-4">Detalles</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div><span className="text-white/30">Cliente:</span><p className="text-white/80 mt-0.5">{order.client_name || '—'}</p></div>
+                  <div><span className="text-white/30">Servicio:</span><p className="text-white/80 mt-0.5">{order.service_name || '—'}</p></div>
+                  <div><span className="text-white/30">Asignado a:</span><p className="text-white/80 mt-0.5">{order.assignee_name || 'Sin asignar'}</p></div>
+                  <div><span className="text-white/30">Prioridad:</span><p className="text-white/80 mt-0.5 capitalize">{order.priority}</p></div>
+                  <div><span className="text-white/30">Monto:</span><p className="text-white/80 mt-0.5 font-medium">{formatRD(order.amount)}</p></div>
+                  <div><span className="text-white/30">Pagado:</span><p className="text-white/80 mt-0.5">{formatRD(order.amount_paid)} <span className="text-white/30">({order.payment_status})</span></p></div>
+                  <div><span className="text-white/30">Creada:</span><p className="text-white/80 mt-0.5">{formatDate(order.created_at)}</p></div>
+                  <div><span className="text-white/30">Vencimiento:</span><p className="text-white/80 mt-0.5">{order.due_date ? formatDate(order.due_date) : '—'}</p></div>
                 </div>
-              ))}
-              {(!order.timeline || order.timeline.length === 0) && <p className="text-white/20 text-sm">Sin historial</p>}
-            </div>
+                {order.notes && (
+                  <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                    <span className="text-white/30 text-sm">Notas:</span>
+                    <p className="text-white/60 text-sm mt-1">{order.notes}</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'historial' && (
+              <>
+                <h3 className="text-xs text-white/40 uppercase tracking-wider mb-4">Historial</h3>
+                <div className="space-y-3">
+                  {(order.timeline || []).map((t, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-2 h-2 rounded-full bg-blue-500/40 mt-1.5 shrink-0" />
+                      <div>
+                        <p className="text-sm text-white/70">{t.description}</p>
+                        <p className="text-xs text-white/30 mt-0.5">{t.user_name} · {formatDate(t.created_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {(!order.timeline || order.timeline.length === 0) && <p className="text-white/20 text-sm">Sin historial</p>}
+                </div>
+              </>
+            )}
+
+            {activeTab === 'mensajes' && (
+              <OrderMessages
+                orderId={orderId}
+                messages={order.messages || []}
+                onMessageSent={refetch}
+              />
+            )}
           </div>
         </div>
 

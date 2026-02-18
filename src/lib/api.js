@@ -131,6 +131,10 @@ class ApiClient {
   createUser(data) { return this.post('/api/team', data); }
   updateUser(id, data) { return this.put(`/api/team/${id}`, data); }
 
+  // Portal Messages
+  getOrderMessages(orderId) { return this.get(`/api/orders/${orderId}/messages`); }
+  sendOrderMessage(orderId, data) { return this.post(`/api/orders/${orderId}/messages`, data); }
+
   // Settings
   getSettings() { return this.get('/api/settings'); }
   updateSetting(key, value) { return this.put(`/api/settings/${key}`, { value }); }
